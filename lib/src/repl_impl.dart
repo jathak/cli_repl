@@ -41,7 +41,9 @@ class ReplAdapter {
   Iterable<String> inputLines() sync* {
     while (true) {
       try {
-        yield stdin.readLineSync();
+        String line = stdin.readLineSync();
+        if (line == null) break;
+        yield line;
       } on StdinException {
         break;
       }
