@@ -15,9 +15,10 @@ class Repl {
   /// completed statement or allow for a continuation.
   StatementValidator validator;
 
-  /// If true, use sharedStdIn instead of the normal stdin.
+  /// If true, use sharedStdIn instead of the normal stdin when running
+  /// asynchronously. Ignored for run()
   ///
-  /// This means that something else could listen to stdin after the REPL
+  /// This means that something else could listen to stdin after runAsync
   /// exits, but it also means that you have to call sharedStdIn.terminate()
   /// manually. This defaults to false.
   bool useSharedStdIn;
@@ -35,8 +36,13 @@ class Repl {
 
   ReplAdapter _adapter;
 
+  /// Run the REPL, yielding complete statements synchronously.
+  Iterable<String> run() => _adapter.run();
+
   /// Run the REPL, yielding complete statements asynchronously.
-  Stream<String> run() => _adapter.run();
+  ///
+  /// Note that the REPL will continue if you await in an "await for" loop.
+  Stream<String> runAsync() => _adapter.runAsync();
 
   /// Kills and cleans up the REPL.
   Future exit() => _adapter.exit();

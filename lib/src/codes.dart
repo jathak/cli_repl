@@ -11,10 +11,12 @@ const eof = 4;
 const backspace = 127;
 const clear = 12;
 const newLine = 10;
+const carriageReturn = 13;
 const forward = 6;
 const backward = 2;
-const deleteToStart = 21;
-const deleteToEnd = 11;
+const killToStart = 21;
+const killToEnd = 11;
+const yank = 25;
 const home = 72;
 const end = 70;
 

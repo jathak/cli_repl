@@ -3,10 +3,10 @@
 
 import 'package:cli_repl/cli_repl.dart';
 
-main(args) async {
+main(args) {
   var v = (str) => str.trim().isEmpty || str.trim().endsWith(';');
   var repl = new Repl(prompt: '>>> ', continuation: '... ', validator: v);
-  await for (var x in repl.run()) {
+  for (var x in repl.run()) {
     if (x.trim().isEmpty) continue;
     print(x);
   }

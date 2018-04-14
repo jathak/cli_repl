@@ -14,14 +14,48 @@ class ReplAdapter {
 
   ReplAdapter(this.repl);
 
-  Stream<String> run() async* {
+  Iterable<String> run() sync* {
+    // If no ANSI input, read line-by-line (for Windows / running w/o terminal)
+    if (!stdin.supportsAnsiEscapes) {
+      yield* linesToStatements(inputLines());
+      return;
+    }
+    // Otherwise, do a normal interactive session
+    stdin.echoMode = false;
+    stdin.lineMode = false;
+    while (true) {
+      try {
+        var result = readStatement();
+        if (result == null) {
+          print("");
+          break;
+        }
+        yield result;
+      } on Exception catch (e) {
+        print(e);
+      }
+    }
+    exit();
+  }
+
+  Iterable<String> inputLines() sync* {
+    while (true) {
+      try {
+        yield stdin.readLineSync();
+      } on StdinException {
+        break;
+      }
+    }
+  }
+
+  Stream<String> runAsync() async* {
     stdin.echoMode = false;
     stdin.lineMode = false;
     charQueue = new StreamQueue<int>(
         (repl.useSharedStdIn ? sharedStdIn : stdin).expand((data) => data));
     while (true) {
       try {
-        var result = await readStatement();
+        var result = await readStatementAsync();
         if (result == null) {
           print("");
           break;
@@ -34,10 +68,26 @@ class ReplAdapter {
     await exit();
   }
 
-  exit() async {
+  exit() {
     stdin.lineMode = true;
     stdin.echoMode = true;
-    await charQueue.cancel();
+    return charQueue?.cancel();
+  }
+
+  Iterable<String> linesToStatements(Iterable<String> lines) sync* {
+    String previous = "";
+    for (var line in lines) {
+      write(previous == "" ? repl.prompt : repl.continuation);
+      previous += line;
+      // If no terminal, print input along with output.
+      if (!stdout.hasTerminal) stdout.writeln(line);
+      if (repl.validator(previous)) {
+        yield previous;
+        previous = "";
+      } else {
+        previous += '\n';
+      }
+    }
   }
 
   StreamQueue<int> charQueue;
@@ -66,82 +116,118 @@ class ReplAdapter {
   int historyIndex = -1;
   String currentSaved = "";
 
+  String previousLines = "";
   bool inContinuation = false;
 
-  Future<String> readStatement() async {
-    write(repl.prompt);
+  String readStatement() {
+    startReadStatement();
+    while (true) {
+      int char = stdin.readByteSync();
+      if (char == eof && buffer.isEmpty) return null;
+      if (char == escape) {
+        if (stdin.readByteSync() != c('[')) {
+          throw new Exception('Bad ANSI escape sequence');
+        }
+        handleAnsi(stdin.readByteSync());
+      } else {
+        var result = processCharacter(char);
+        if (result != null) return result;
+      }
+    }
+  }
 
+  Future<String> readStatementAsync() async {
+    startReadStatement();
+    while (true) {
+      int char = await charQueue.next;
+      if (char == eof && buffer.isEmpty) return null;
+      if (char == escape) {
+        if (await charQueue.next != c('[')) {
+          throw new Exception('Bad ANSI escape sequence');
+        }
+        handleAnsi(await charQueue.next);
+      } else {
+        var result = processCharacter(char);
+        if (result != null) return result;
+      }
+    }
+  }
+
+  void startReadStatement() {
+    write(repl.prompt);
     buffer.clear();
     cursor = 0;
     historyIndex = -1;
-    inContinuation = false;
     currentSaved = "";
+    inContinuation = false;
+    previousLines = "";
+  }
 
-    String previousLines = "";
+  List<int> yanked = [];
 
-    while (true) {
-      int char = await charQueue.next;
-      switch (char) {
-        case eof:
-          if (buffer.isEmpty) return null;
-          if (cursor != buffer.length) delete(1);
-          break;
-        case clear:
-          clearScreen();
-          break;
-        case escape:
-          await handleAnsi();
-          break;
-        case backspace:
-          if (cursor > 0) {
-            setCursor(cursor - 1);
-            delete(1);
-          }
-          break;
-        case deleteToEnd:
-          delete(buffer.length - cursor);
-          break;
-        case deleteToStart:
-          int oldCursor = cursor;
-          setCursor(0);
-          delete(oldCursor);
-          break;
-        case startOfLine:
-          setCursor(0);
-          break;
-        case endOfLine:
-          setCursor(buffer.length);
-          break;
-        case forward:
-          setCursor(cursor + 1);
-          break;
-        case backward:
+  String processCharacter(int char) {
+    switch (char) {
+      case eof:
+        if (cursor != buffer.length) delete(1);
+        break;
+      case clear:
+        clearScreen();
+        break;
+      case backspace:
+        if (cursor > 0) {
           setCursor(cursor - 1);
-          break;
-        case newLine:
-          String contents = new String.fromCharCodes(buffer);
-          setCursor(buffer.length);
-          input(char);
-          if (repl.history.isEmpty || contents != repl.history.first) {
-            repl.history.insert(0, contents);
-          }
-          while (repl.history.length > repl.maxHistory) {
-            repl.history.removeLast();
-          }
-          if (repl.validator(previousLines + contents)) {
-            return previousLines + contents;
-          }
-          previousLines += contents + '\n';
-          buffer.clear();
-          cursor = 0;
-          inContinuation = true;
-          write(repl.continuation);
-          break;
-        default:
-          input(char);
-          break;
-      }
+          delete(1);
+        }
+        break;
+      case killToEnd:
+        yanked = delete(buffer.length - cursor);
+        break;
+      case killToStart:
+        int oldCursor = cursor;
+        setCursor(0);
+        yanked = delete(oldCursor);
+        break;
+      case yank:
+        yanked.forEach(input);
+        break;
+      case startOfLine:
+        setCursor(0);
+        break;
+      case endOfLine:
+        setCursor(buffer.length);
+        break;
+      case forward:
+        setCursor(cursor + 1);
+        break;
+      case backward:
+        setCursor(cursor - 1);
+        break;
+      case carriageReturn:
+      case newLine:
+        String contents = new String.fromCharCodes(buffer);
+        setCursor(buffer.length);
+        input(char);
+        if (repl.history.isEmpty || contents != repl.history.first) {
+          repl.history.insert(0, contents);
+        }
+        while (repl.history.length > repl.maxHistory) {
+          repl.history.removeLast();
+        }
+        if (char == carriageReturn) write('\n');
+        if (repl.validator(previousLines + contents)) {
+          return previousLines + contents;
+        }
+        previousLines += contents + '\n';
+        buffer.clear();
+        cursor = 0;
+        inContinuation = true;
+        write(repl.continuation);
+        break;
+      default:
+        input(char);
+        break;
     }
+    return null;
   }
 
   input(int char) {
@@ -150,17 +236,19 @@ class ReplAdapter {
     moveCursor(-(buffer.length - cursor));
   }
 
-  delete(int amount) {
-    if (amount <= 0) return;
+  List<int> delete(int amount) {
+    if (amount <= 0) return [];
     int wipeAmount = buffer.length - cursor;
     if (amount > wipeAmount) amount = wipeAmount;
     write(' ' * wipeAmount);
     moveCursor(-wipeAmount);
+    var result = buffer.sublist(cursor, cursor + amount);
     for (int i = 0; i < amount; i++) {
       buffer.removeAt(cursor);
     }
     write(new String.fromCharCodes(buffer.skip(cursor)));
     moveCursor(-(buffer.length - cursor));
+    return result;
   }
 
   replaceWith(String text) {
@@ -173,11 +261,8 @@ class ReplAdapter {
     cursor = buffer.length;
   }
 
-  handleAnsi() async {
-    if (await charQueue.next != c('[')) {
-      throw new Exception('Bad ANSI escape sequence');
-    }
-    switch (await charQueue.next) {
+  handleAnsi(int char) {
+    switch (char) {
       case arrowLeft:
         setCursor(cursor - 1);
         break;

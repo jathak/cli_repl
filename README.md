@@ -8,7 +8,7 @@ Example Usage:
 
 ```dart
 /// Echoes all entered lines
-await for (var line in new Repl().run()) {
+for (var line in new Repl().run()) {
   print(line);
 } 
 ```
@@ -27,8 +27,10 @@ You can change this by passing a `prompt` to the `Repl` constructor. By default,
 statement continuations on a new line will start with whitespace equal to the
 length of the `prompt`. You can override this by passing in `continuation`.
 
-See `example/example.dart` for a demonstration of statement validation and
-custom prompts.
+See [`example/example.dart`][example] for a demonstration of statement
+validation and custom prompts.
+
+[example]: https://github.com/jathak/cli_repl/tree/master/example/example.dart
 
 ### History
 
@@ -48,6 +50,23 @@ By default, a maximum of 50 entries are stored. You can change this by passing
 no text, exit.
 - `Ctrl-F`: Moves forward one character
 - `Ctrl-B`: Moves backward one character
-- `Ctrl-U`: Delete to start of line
-- `Ctrl-K`: Delete to end of line
+- `Ctrl-U`: Kill (cut) to start of line
+- `Ctrl-K`: Kill (cut) to end of line
+- `Ctrl-Y`: Yank (paste) previously killed text, inserting at cursor
 - `Up`/`Down`: Navigate within history
+
+### Testing REPLs
+
+If using `Repl.run()` without a terminal, the input will be printed along with
+the prompts, allowing you to test REPLs made with this library by comparing
+stdout to the expected log input and output together.
+
+See [test/repl_test.dart][repl_test] for an example of this.
+
+[repl_test]: https://github.com/jathak/cli_repl/tree/master/test/repl_test.dart
+
+### Terminals without ANSI Escape Codes for Input
+
+If the terminal doesn't support ANSI escape codes for input (e.g. on Windows),
+the history and navigation shortcuts will not work, but it should fall back to
+reading input line-by-line.
