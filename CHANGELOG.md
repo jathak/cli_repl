@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- Fix issues on Windows
+
 ## 0.1.0
 
 - Makes `Repl.run()` synchronous, since that use case is probably more common.
@@ -10,9 +14,6 @@ instead print both prompts and the input, allowing you to test a REPL by piping
 input to it.
 
 - Adds support for limited cutting and pasting with Ctrl-U, Ctrl-K, and Ctrl-Y.
-
-- Adds fallback to read line-by-line when the terminal doesn't support ANSI
-inputs (e.g. on Windows).
 
 ## 0.0.1
 

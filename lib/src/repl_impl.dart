@@ -15,8 +15,8 @@ class ReplAdapter {
   ReplAdapter(this.repl);
 
   Iterable<String> run() sync* {
-    // If no ANSI input, read line-by-line (for Windows / running w/o terminal)
-    if (!stdin.supportsAnsiEscapes) {
+    // If no terminal, print both input and prompts (useful for testing)
+    if (!stdout.hasTerminal) {
       yield* linesToStatements(inputLines());
       return;
     }
@@ -79,8 +79,7 @@ class ReplAdapter {
     for (var line in lines) {
       write(previous == "" ? repl.prompt : repl.continuation);
       previous += line;
-      // If no terminal, print input along with output.
-      if (!stdout.hasTerminal) stdout.writeln(line);
+      stdout.writeln(line);
       if (repl.validator(previous)) {
         yield previous;
         previous = "";

@@ -64,9 +64,3 @@ stdout to the expected log input and output together.
 See [test/repl_test.dart][repl_test] for an example of this.
 
 [repl_test]: https://github.com/jathak/cli_repl/tree/master/test/repl_test.dart
-
-### Terminals without ANSI Escape Codes for Input
-
-If the terminal doesn't support ANSI escape codes for input (e.g. on Windows),
-the history and navigation shortcuts will not work, but it should fall back to
-reading input line-by-line.
