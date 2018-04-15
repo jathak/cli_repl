@@ -4,9 +4,16 @@ import 'package:test/test.dart';
 import 'package:test_process/test_process.dart';
 
 main() {
-  test('example repl works with piped input', () async {
-    var process =
-        await TestProcess.start(Platform.executable, ['example/example.dart']);
+  testWith(Platform.executable, 'example/example.dart');
+  testWith('node', 'build/example/example.js');
+}
+
+testWith(String executable, String script) {
+  test('example repl works', () async {
+    if (!await new File(script).exists()) {
+      fail("$script does not exist");
+    }
+    var process = await TestProcess.start(executable, [script]);
     process.stdin.writeln('4;');
     process.stdin.writeln('a b c');
     process.stdin.writeln('d e f;');

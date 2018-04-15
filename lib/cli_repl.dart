@@ -2,7 +2,7 @@ library cli_repl;
 
 import 'dart:async';
 
-import 'src/repl_impl.dart';
+import 'src/repl_adapter.dart';
 
 class Repl {
   /// Text displayed when prompting the user for a new statement.

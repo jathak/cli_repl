@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.2
+
+- If compiled to JS and run with Node, `Repl.runAsync()` should now work. It
+uses the [Node readline][] library for line editing.
+
+- `Repl.runAsync()` now supports running with no terminal, and should operate
+similarly to how `Repl.run()` does, both on the Dart VM and on Node.
+
+[Node readline]: https://nodejs.org/api/readline.html
+
 ## 0.1.1
 
 - Fix issues on Windows

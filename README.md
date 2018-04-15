@@ -57,10 +57,22 @@ no text, exit.
 
 ### Testing REPLs
 
-If using `Repl.run()` without a terminal, the input will be printed along with
-the prompts, allowing you to test REPLs made with this library by comparing
-stdout to the expected log input and output together.
+If running without a terminal, the input will be printed along with the prompts,
+allowing you to test REPLs made with this library by comparing stdout to the
+expected log input and output together.
 
 See [test/repl_test.dart][repl_test] for an example of this.
 
 [repl_test]: https://github.com/jathak/cli_repl/tree/master/test/repl_test.dart
+
+### Running on Node
+
+If you compile this to JS with Dart 2, you can run it on Node.
+
+There are a couple of behavior differences:
+
+- Node's built-in readline library is used, so the supported navigation and
+history commands may vary from the Dart version.
+- Likewise, line history is managed by Node, and you can't change the maximum
+number of entries or edit history manually from Dart.
+- Only `Repl.runAsync()` works. Calling `Repl.run()` will throw an error.

@@ -1,12 +1,10 @@
-library repl_impl;
-
 import 'dart:async';
 import 'dart:io';
 
 import 'package:async/async.dart';
 import 'package:io/io.dart';
 
-import '../cli_repl.dart';
+import '../../cli_repl.dart';
 import 'codes.dart';
 
 class ReplAdapter {
@@ -15,14 +13,15 @@ class ReplAdapter {
   ReplAdapter(this.repl);
 
   Iterable<String> run() sync* {
-    // If no terminal, print both input and prompts (useful for testing)
-    if (!stdout.hasTerminal) {
+    try {
+      // Try to set up for interactive session
+      stdin.echoMode = false;
+      stdin.lineMode = false;
+    } on StdinException {
+      // If it can't, print both input and prompts (useful for testing)
       yield* linesToStatements(inputLines());
       return;
     }
-    // Otherwise, do a normal interactive session
-    stdin.echoMode = false;
-    stdin.lineMode = false;
     while (true) {
       try {
         var result = readStatement();
@@ -51,12 +50,20 @@ class ReplAdapter {
   }
 
   Stream<String> runAsync() async* {
-    stdin.echoMode = false;
-    stdin.lineMode = false;
+    bool interactive = true;
+    try {
+      stdin.echoMode = false;
+      stdin.lineMode = false;
+    } on StdinException {
+      interactive = false;
+    }
     charQueue = new StreamQueue<int>(
         (repl.useSharedStdIn ? sharedStdIn : stdin).expand((data) => data));
     while (true) {
       try {
+        if (!interactive && !(await charQueue.hasNext)) {
+          break;
+        }
         var result = await readStatementAsync();
         if (result == null) {
           print("");
@@ -71,8 +78,10 @@ class ReplAdapter {
   }
 
   exit() {
-    stdin.lineMode = true;
-    stdin.echoMode = true;
+    try {
+      stdin.lineMode = true;
+      stdin.echoMode = true;
+    } on StdinException {}
     return charQueue?.cancel();
   }
 
@@ -214,7 +223,9 @@ class ReplAdapter {
         while (repl.history.length > repl.maxHistory) {
           repl.history.removeLast();
         }
-        if (char == carriageReturn) write('\n');
+        if (char == carriageReturn) {
+          write('\n');
+        }
         if (repl.validator(previousLines + contents)) {
           return previousLines + contents;
         }
