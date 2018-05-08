@@ -18,8 +18,8 @@ class ReplAdapter {
 
   Stream<String> runAsync() async* {
     var output = (stdin.isTTY ?? false) ? stdout : null;
-    rl = readline
-        .createInterface(new ReadlineOptions(input: stdin, output: output));
+    rl = readline.createInterface(
+        new ReadlineOptions(input: stdin, output: output, prompt: repl.prompt));
     String statement = "";
     String prompt = repl.prompt;
     var controller = new StreamController<String>();
@@ -36,9 +36,11 @@ class ReplAdapter {
         yield statement;
         statement = "";
         prompt = repl.prompt;
+        rl.setPrompt(repl.prompt);
       } else {
         statement += '\n';
         prompt = repl.continuation;
+        rl.setPrompt(repl.continuation);
       }
     }
   }
@@ -90,4 +92,5 @@ class ReadlineInterface {
   external void question(String prompt, void callback([object]));
   external void close();
   external void pause();
+  external void setPrompt(String prompt);
 }

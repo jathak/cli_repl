@@ -135,14 +135,20 @@ class ReplAdapter {
       int char = stdin.readByteSync();
       if (char == eof && buffer.isEmpty) return null;
       if (char == escape) {
-        if (stdin.readByteSync() != c('[')) {
-          throw new Exception('Bad ANSI escape sequence');
+        var char = stdin.readByteSync();
+        if (char == c('[') || char == c('O')) {
+          var ansi = stdin.readByteSync();
+          if (!handleAnsi(ansi)) {
+            write('^[');
+            input(char);
+            input(ansi);
+          }
+          continue;
         }
-        handleAnsi(stdin.readByteSync());
-      } else {
-        var result = processCharacter(char);
-        if (result != null) return result;
+        write('^[');
       }
+      var result = processCharacter(char);
+      if (result != null) return result;
     }
   }
 
@@ -152,14 +158,20 @@ class ReplAdapter {
       int char = await charQueue.next;
       if (char == eof && buffer.isEmpty) return null;
       if (char == escape) {
-        if (await charQueue.next != c('[')) {
-          throw new Exception('Bad ANSI escape sequence');
+        char = await charQueue.next;
+        if (char == c('[') || char == c('O')) {
+          var ansi = await charQueue.next;
+          if (!handleAnsi(ansi)) {
+            write('^[');
+            input(char);
+            input(ansi);
+          }
+          continue;
         }
-        handleAnsi(await charQueue.next);
-      } else {
-        var result = processCharacter(char);
-        if (result != null) return result;
+        write('^[');
       }
+      var result = processCharacter(char);
+      if (result != null) return result;
     }
   }
 
@@ -273,14 +285,14 @@ class ReplAdapter {
     cursor = buffer.length;
   }
 
-  handleAnsi(int char) {
+  bool handleAnsi(int char) {
     switch (char) {
       case arrowLeft:
         setCursor(cursor - 1);
-        break;
+        return true;
       case arrowRight:
         setCursor(cursor + 1);
-        break;
+        return true;
       case arrowUp:
         if (historyIndex + 1 < repl.history.length) {
           if (historyIndex == -1) {
@@ -290,7 +302,7 @@ class ReplAdapter {
           }
           replaceWith(repl.history[++historyIndex]);
         }
-        break;
+        return true;
       case arrowDown:
         if (historyIndex > 0) {
           repl.history[historyIndex] = new String.fromCharCodes(buffer);
@@ -299,15 +311,15 @@ class ReplAdapter {
           historyIndex--;
           replaceWith(currentSaved);
         }
-        break;
+        return true;
       case home:
         setCursor(0);
-        break;
+        return true;
       case end:
         setCursor(buffer.length);
-        break;
+        return true;
       default:
-        break;
+        return false;
     }
   }
 

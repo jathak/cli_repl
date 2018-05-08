@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.3
+
+- Line editing should now work in environments like the Emacs terminal where
+`EscO` is used for ANSI-escaped input instead of the more typical `Esc[`.
+
+- Fixed issue with the prompt changing to the Node default when running on it.
+
+- Broadened dependency on the async package to support 2.x.x versions.
+
 ## 0.1.2
 
 - If compiled to JS and run with Node, `Repl.runAsync()` should now work. It
