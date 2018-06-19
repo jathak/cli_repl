@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:async/async.dart';
-import 'package:io/io.dart';
 
 import '../../cli_repl.dart';
 import 'codes.dart';
@@ -57,8 +56,7 @@ class ReplAdapter {
     } on StdinException {
       interactive = false;
     }
-    charQueue = new StreamQueue<int>(
-        (repl.useSharedStdIn ? sharedStdIn : stdin).expand((data) => data));
+    charQueue = new StreamQueue<int>(stdin.expand((data) => data));
     while (true) {
       try {
         if (!interactive && !(await charQueue.hasNext)) {

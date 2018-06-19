@@ -15,20 +15,11 @@ class Repl {
   /// completed statement or allow for a continuation.
   StatementValidator validator;
 
-  /// If true, use sharedStdIn instead of the normal stdin when running
-  /// asynchronously. Ignored for run()
-  ///
-  /// This means that something else could listen to stdin after runAsync
-  /// exits, but it also means that you have to call sharedStdIn.terminate()
-  /// manually. This defaults to false.
-  bool useSharedStdIn;
-
   Repl(
       {this.prompt: '',
       String continuation,
       StatementValidator validator,
-      this.maxHistory: 50,
-      this.useSharedStdIn: false})
+      this.maxHistory: 50})
       : continuation = continuation ?? ' ' * prompt.length,
         validator = validator ?? alwaysValid {
     _adapter = new ReplAdapter(this);

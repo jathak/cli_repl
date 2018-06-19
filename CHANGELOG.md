@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.0
+
+- Removes option to use sharedStdIn, as well as the `io` package dependency.
+
 ## 0.1.3
 
 - Line editing should now work in environments like the Emacs terminal where
