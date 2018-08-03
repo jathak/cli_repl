@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.0+1
+
+- Support Dart 2 stable.
+
 ## 0.2.0
 
 - Removes option to use sharedStdIn, as well as the `io` package dependency.
