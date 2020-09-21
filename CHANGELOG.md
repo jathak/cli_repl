@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0+2
+
+- Removed a `dart:async` import that isn't required for \>=Dart 2.1.
+- Require \>=Dart 2.1.
+
 ## 0.2.0+1
 
 - Support Dart 2 stable.

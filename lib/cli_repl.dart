@@ -1,7 +1,5 @@
 library cli_repl;
 
-import 'dart:async';
-
 import 'src/repl_adapter.dart';
 
 class Repl {
