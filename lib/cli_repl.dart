@@ -17,7 +17,8 @@ class Repl {
       {this.prompt: '',
       String continuation,
       StatementValidator validator,
-      this.maxHistory: 50})
+      this.maxHistory: 50,
+      this.logWhitespace: true})
       : continuation = continuation ?? ' ' * prompt.length,
         validator = validator ?? alwaysValid {
     _adapter = new ReplAdapter(this);
@@ -45,6 +46,11 @@ class Repl {
   ///
   /// Defaults to 50.
   int maxHistory;
+
+  /// Should repl history include whitespace-only entries
+  ///
+  /// Defaults to true
+  bool logWhitespace;
 }
 
 /// Returns true if [text] is a complete statement or false otherwise.

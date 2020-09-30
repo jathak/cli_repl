@@ -227,7 +227,8 @@ class ReplAdapter {
         String contents = new String.fromCharCodes(buffer);
         setCursor(buffer.length);
         input(char);
-        if (repl.history.isEmpty || contents != repl.history.first) {
+        if ((repl.history.isEmpty || contents != repl.history.first)
+          && (contents.trim().isNotEmpty || repl.logWhitespace)) {
           repl.history.insert(0, contents);
         }
         while (repl.history.length > repl.maxHistory) {
