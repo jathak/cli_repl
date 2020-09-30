@@ -137,7 +137,8 @@ class ReplAdapter {
         if (char == c('[') || char == c('O')) {
           var ansi = stdin.readByteSync();
           if (!handleAnsi(ansi)) {
-            write('^[');
+            input('^'.codeUnitAt(0));
+            input('['.codeUnitAt(0));
             input(char);
             input(ansi);
           }
@@ -160,7 +161,8 @@ class ReplAdapter {
         if (char == c('[') || char == c('O')) {
           var ansi = await charQueue.next;
           if (!handleAnsi(ansi)) {
-            write('^[');
+            input('^'.codeUnitAt(0));
+            input('['.codeUnitAt(0));
             input(char);
             input(ansi);
           }
