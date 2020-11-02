@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import '../../cli_repl.dart';
 
 class ReplAdapter {
