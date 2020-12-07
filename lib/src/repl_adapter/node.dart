@@ -14,33 +14,33 @@ class ReplAdapter {
     throw new UnsupportedError('Synchronous REPLs not supported in Node');
   }
 
-  ReadlineInterface rl;
+  ReadlineInterface? rl;
 
   Stream<String> runAsync() async* {
-    var output = (stdin.isTTY ?? false) ? stdout : null;
+    var output = stdinIsTTY ? stdout : null;
     rl = readline.createInterface(
         new ReadlineOptions(input: stdin, output: output, prompt: repl.prompt));
     String statement = "";
     String prompt = repl.prompt;
     var controller = new StreamController<String>();
     var queue = new StreamQueue<String>(controller.stream);
-    rl.on('line', allowInterop(([value]) {
+    rl!.on('line', allowInterop((value) {
       controller.add(value);
     }));
     while (true) {
-      if (stdin.isTTY ?? false) stdout.write(prompt);
+      if (stdinIsTTY) stdout.write(prompt);
       var line = await queue.next;
-      if (!(stdin.isTTY ?? false)) print('$prompt$line');
+      if (!stdinIsTTY) print('$prompt$line');
       statement += line;
       if (repl.validator(statement)) {
         yield statement;
         statement = "";
         prompt = repl.prompt;
-        rl.setPrompt(repl.prompt);
+        rl!.setPrompt(repl.prompt);
       } else {
         statement += '\n';
         prompt = repl.continuation;
-        rl.setPrompt(repl.continuation);
+        rl!.setPrompt(repl.continuation);
       }
     }
   }
@@ -55,12 +55,14 @@ external ReadlineModule require(String name);
 
 final readline = require('readline');
 
+bool get stdinIsTTY => stdin.isTTY ?? false;
+
 @JS('process.stdin')
 external Stdin get stdin;
 
 @JS()
 class Stdin {
-  external bool get isTTY;
+  external bool? get isTTY;
 }
 
 @JS('process.stdout')
@@ -68,7 +70,6 @@ external Stdout get stdout;
 
 @JS()
 class Stdout {
-  external bool get isTTY;
   external void write(String data);
 }
 
@@ -83,13 +84,13 @@ class ReadlineOptions {
   external get input;
   external get output;
   external String get prompt;
-  external factory ReadlineOptions({input, output, String prompt});
+  external factory ReadlineOptions({input, output, String? prompt});
 }
 
 @JS()
 class ReadlineInterface {
-  external void on(String event, void callback([object]));
-  external void question(String prompt, void callback([object]));
+  external void on(String event, void callback(object));
+  external void question(String prompt, void callback(object));
   external void close();
   external void pause();
   external void setPrompt(String prompt);

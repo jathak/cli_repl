@@ -15,15 +15,15 @@ class Repl {
 
   Repl(
       {this.prompt: '',
-      String continuation,
-      StatementValidator validator,
+      String? continuation,
+      StatementValidator? validator,
       this.maxHistory: 50})
       : continuation = continuation ?? ' ' * prompt.length,
         validator = validator ?? alwaysValid {
     _adapter = new ReplAdapter(this);
   }
 
-  ReplAdapter _adapter;
+  late ReplAdapter _adapter;
 
   /// Run the REPL, yielding complete statements synchronously.
   Iterable<String> run() => _adapter.run();
