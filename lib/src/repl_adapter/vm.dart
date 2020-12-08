@@ -39,7 +39,7 @@ class ReplAdapter {
   Iterable<String> inputLines() sync* {
     while (true) {
       try {
-        String line = stdin.readLineSync();
+        String? line = stdin.readLineSync();
         if (line == null) break;
         yield line;
       } on StdinException {
@@ -59,7 +59,7 @@ class ReplAdapter {
     charQueue = new StreamQueue<int>(stdin.expand((data) => data));
     while (true) {
       try {
-        if (!interactive && !(await charQueue.hasNext)) {
+        if (!interactive && !(await charQueue!.hasNext)) {
           break;
         }
         var result = await readStatementAsync();
@@ -98,7 +98,7 @@ class ReplAdapter {
     }
   }
 
-  StreamQueue<int> charQueue;
+  StreamQueue<int>? charQueue;
 
   List<int> buffer = [];
   int cursor = 0;
@@ -127,7 +127,7 @@ class ReplAdapter {
   String previousLines = "";
   bool inContinuation = false;
 
-  String readStatement() {
+  String? readStatement() {
     startReadStatement();
     while (true) {
       int char = stdin.readByteSync();
@@ -150,15 +150,15 @@ class ReplAdapter {
     }
   }
 
-  Future<String> readStatementAsync() async {
+  Future<String?> readStatementAsync() async {
     startReadStatement();
     while (true) {
-      int char = await charQueue.next;
+      int char = await charQueue!.next;
       if (char == eof && buffer.isEmpty) return null;
       if (char == escape) {
-        char = await charQueue.next;
+        char = await charQueue!.next;
         if (char == c('[') || char == c('O')) {
-          var ansi = await charQueue.next;
+          var ansi = await charQueue!.next;
           if (!handleAnsi(ansi)) {
             write('^[');
             input(char);
@@ -185,7 +185,7 @@ class ReplAdapter {
 
   List<int> yanked = [];
 
-  String processCharacter(int char) {
+  String? processCharacter(int char) {
     switch (char) {
       case eof:
         if (cursor != buffer.length) delete(1);
