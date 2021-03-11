@@ -1,18 +1,18 @@
 name: cli_repl
 description: A simple library for creating CLI REPLs
-version: 0.2.1-nullsafety
+version: 0.2.1
 homepage: https://github.com/jathak/cli_repl
 author: Jen Thakar <jen@jenthakar.com>
 
 dependencies:
-  async: ^2.5.0-nullsafety
-  js: ^0.6.3-nullsafety
+  async: ^2.5.0
+  js: ^0.6.3
 
 dev_dependencies:
-  grinder: ^0.8.1
-  node_preamble: ^1.4.0
-  test: ^1.16.0-nullsafety
-  test_process: ^1.0.1
+  grinder: ^0.9.0-nullsafety.0
+  node_preamble: ^2.0.0
+  test: ^1.16.5
+  test_process: ^2.0.0
 
 environment:
-  sdk: '>=2.12.0-0 <3.0.0'
+  sdk: '>=2.12.0 <3.0.0'
