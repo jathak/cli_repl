@@ -11,5 +11,5 @@ class ReplAdapter {
 
   Stream<String> runAsync() async* {}
 
-  exit() {}
+  FutureOr<void> exit() {}
 }

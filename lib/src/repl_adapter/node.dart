@@ -16,37 +16,52 @@ class ReplAdapter {
 
   ReadlineInterface? rl;
 
-  Stream<String> runAsync() async* {
+  Stream<String> runAsync() {
     var output = stdinIsTTY ? stdout : null;
-    rl = readline.createInterface(
+    var rl = this.rl = readline.createInterface(
         new ReadlineOptions(input: stdin, output: output, prompt: repl.prompt));
-    String statement = "";
-    String prompt = repl.prompt;
-    var controller = new StreamController<String>();
-    var queue = new StreamQueue<String>(controller.stream);
-    rl!.on('line', allowInterop((value) {
-      controller.add(value);
-    }));
-    while (true) {
-      if (stdinIsTTY) stdout.write(prompt);
-      var line = await queue.next;
-      if (!stdinIsTTY) print('$prompt$line');
-      statement += line;
-      if (repl.validator(statement)) {
-        yield statement;
-        statement = "";
-        prompt = repl.prompt;
-        rl!.setPrompt(repl.prompt);
-      } else {
-        statement += '\n';
-        prompt = repl.continuation;
-        rl!.setPrompt(repl.continuation);
-      }
-    }
+    var statement = "";
+    var prompt = repl.prompt;
+
+    late StreamController<String> runController;
+    runController = StreamController<String>(
+        onListen: () async {
+          try {
+            var lineController = StreamController<String>();
+            var lineQueue = StreamQueue<String>(lineController.stream);
+            rl.on('line',
+                allowInterop((value) => lineController.add(value as String)));
+
+            while (true) {
+              if (stdinIsTTY) stdout.write(prompt);
+              var line = await lineQueue.next;
+              if (!stdinIsTTY) print('$prompt$line');
+              statement += line;
+              if (repl.validator(statement)) {
+                runController.add(statement);
+                statement = "";
+                prompt = repl.prompt;
+                rl.setPrompt(repl.prompt);
+              } else {
+                statement += '\n';
+                prompt = repl.continuation;
+                rl.setPrompt(repl.continuation);
+              }
+            }
+          } catch (error, stackTrace) {
+            runController.addError(error, stackTrace);
+            await exit();
+            runController.close();
+          }
+        },
+        onCancel: exit);
+
+    return runController.stream;
   }
 
-  exit() {
+  FutureOr<void> exit() {
     rl?.close();
+    rl = null;
   }
 }
 

@@ -8,6 +8,7 @@ main(args) async {
   var repl = new Repl(prompt: '>>> ', continuation: '... ', validator: v);
   await for (var x in repl.runAsync()) {
     if (x.trim().isEmpty) continue;
+    if (x == 'throw;') throw "oh no!";
     print(x);
   }
 }

@@ -1,5 +1,7 @@
 library cli_repl;
 
+import 'dart:async';
+
 import 'src/repl_adapter.dart';
 
 class Repl {
@@ -34,7 +36,7 @@ class Repl {
   Stream<String> runAsync() => _adapter.runAsync();
 
   /// Kills and cleans up the REPL.
-  Future exit() => _adapter.exit();
+  FutureOr<void> exit() => _adapter.exit();
 
   /// History is by line, not by statement.
   ///

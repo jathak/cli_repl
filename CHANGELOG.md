@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2
+
+- Avoid triggering https://github.com/dart-lang/sdk/issue/34775.
+
+* Explicitly declare `Repl.exit()`'s type as `FutureOr<void>`.
+
 ## 0.2.1
 
 - Migrate to null-safety
