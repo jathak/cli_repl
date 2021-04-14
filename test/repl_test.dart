@@ -4,8 +4,8 @@ import 'package:test/test.dart';
 import 'package:test_process/test_process.dart';
 
 main() {
-  testWith(Platform.executable, 'example/example.dart');
-  testWith('node', 'build/example/example.js');
+  group("VM", () => testWith(Platform.executable, 'example/example.dart'));
+  group("Node.js", () => testWith('node', 'build/example/example.js'));
 }
 
 testWith(String executable, String script) {
@@ -35,5 +35,22 @@ testWith(String executable, String script) {
         ]));
     expect(process.stdout, emitsDone);
     await process.shouldExit(0);
+  });
+
+  // This is a regression test to ensure that the reply code doesn't fall prey
+  // to dart-lang/sdk#34775.
+  test('example repl throws an error', () async {
+    if (!await new File(script).exists()) {
+      fail("$script does not exist");
+    }
+
+    var process = await TestProcess.start(executable, [script]);
+    process.stdin.writeln('throw;');
+    expect(process.stdout, emits(">>> throw;"));
+    expect(process.stdout, emitsDone);
+
+    expect(process.stderr, emitsThrough(contains("oh no!")));
+
+    await process.shouldExit(greaterThan(0));
   });
 }

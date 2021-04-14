@@ -48,7 +48,7 @@ class ReplAdapter {
     }
   }
 
-  Stream<String> runAsync() async* {
+  Stream<String> runAsync() {
     bool interactive = true;
     try {
       stdin.echoMode = false;
@@ -56,31 +56,48 @@ class ReplAdapter {
     } on StdinException {
       interactive = false;
     }
-    charQueue = new StreamQueue<int>(stdin.expand((data) => data));
-    while (true) {
-      try {
-        if (!interactive && !(await charQueue!.hasNext)) {
-          break;
-        }
-        var result = await readStatementAsync();
-        if (result == null) {
-          print("");
-          break;
-        }
-        yield result;
-      } on Exception catch (e) {
-        print(e);
-      }
-    }
-    await exit();
+
+    late StreamController<String> controller;
+    controller = StreamController(
+        onListen: () async {
+          try {
+            var charQueue =
+                this.charQueue = StreamQueue<int>(stdin.expand((data) => data));
+            while (true) {
+              if (!interactive && !(await charQueue.hasNext)) {
+                this.charQueue = null;
+                controller.close();
+                return;
+              }
+
+              var result = await _readStatementAsync(charQueue);
+              if (result == null) {
+                print("");
+                break;
+              }
+              controller.add(result);
+            }
+          } catch (error, stackTrace) {
+            controller.addError(error, stackTrace);
+            await exit();
+            controller.close();
+          }
+        },
+        onCancel: exit,
+        sync: true);
+
+    return controller.stream;
   }
 
-  exit() {
+  FutureOr<void> exit() {
     try {
       stdin.lineMode = true;
       stdin.echoMode = true;
     } on StdinException {}
-    return charQueue?.cancel();
+
+    var future = charQueue?.cancel(immediate: true);
+    charQueue = null;
+    return future;
   }
 
   Iterable<String> linesToStatements(Iterable<String> lines) sync* {
@@ -150,15 +167,15 @@ class ReplAdapter {
     }
   }
 
-  Future<String?> readStatementAsync() async {
+  Future<String?> _readStatementAsync(StreamQueue<int> charQueue) async {
     startReadStatement();
     while (true) {
-      int char = await charQueue!.next;
+      int char = await charQueue.next;
       if (char == eof && buffer.isEmpty) return null;
       if (char == escape) {
-        char = await charQueue!.next;
+        char = await charQueue.next;
         if (char == c('[') || char == c('O')) {
-          var ansi = await charQueue!.next;
+          var ansi = await charQueue.next;
           if (!handleAnsi(ansi)) {
             write('^[');
             input(char);
