@@ -2,7 +2,7 @@ name: cli_repl
 description: A simple library for creating CLI REPLs
 version: 0.2.2
 homepage: https://github.com/jathak/cli_repl
-author: Jen Thakar <jen@jenthakar.com>
+# author: Jen Thakar <jen@jenthakar.com>
 
 dependencies:
   async: ^2.5.0
