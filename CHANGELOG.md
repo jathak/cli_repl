@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+
+- Code cleanup to change how some parameters are initialized.
+
 ## 0.2.2
 
 - Avoid triggering https://github.com/dart-lang/sdk/issue/34775.

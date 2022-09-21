@@ -16,10 +16,10 @@ class Repl {
   StatementValidator validator;
 
   Repl(
-      {this.prompt: '',
+      {this.prompt = '',
       String? continuation,
       StatementValidator? validator,
-      this.maxHistory: 50})
+      this.maxHistory = 50})
       : continuation = continuation ?? ' ' * prompt.length,
         validator = validator ?? alwaysValid {
     _adapter = new ReplAdapter(this);
